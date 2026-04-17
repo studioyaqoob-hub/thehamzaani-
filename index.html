@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>thehamzaani — Video Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0e0e0e;
+    --white: #f5f4f0;
+    --accent: #c8f060;
+    --muted: #888;
+    --border: rgba(0,0,0,0.09);
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    background: var(--white);
+    color: var(--black);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 3rem;
+    background: rgba(245,244,240,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: var(--serif); font-size: 1.15rem; letter-spacing: -0.01em; }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a { text-decoration: none; color: var(--black); font-size: 0.85rem; font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; transition: opacity 0.2s; }
+  .nav-links a:hover { opacity: 0.45; }
+  .nav-cta {
+    background: var(--black); color: var(--white);
+    font-size: 0.8rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 0.55rem 1.25rem; border-radius: 100px; text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nav-cta:hover { background: var(--accent); color: var(--black); }
+
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 3rem;
+    align-items: center;
+    gap: 4rem;
+    padding-top: 5rem;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: var(--accent); color: var(--black);
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.3rem 0.85rem; border-radius: 100px;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title {
+    font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.5rem);
+    line-height: 1.06; letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+  }
+  .hero-title em { font-style: italic; color: var(--muted); }
+  .hero-sub {
+    font-size: 1rem; color: #555; font-weight: 300; max-width: 380px;
+    margin-bottom: 2.5rem; line-height: 1.75;
+  }
+  .hero-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--black); color: var(--white);
+    font-size: 0.85rem; font-weight: 500; letter-spacing: 0.04em;
+    padding: 0.85rem 2rem; border-radius: 100px; text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-primary:hover { background: var(--accent); color: var(--black); }
+  .btn-secondary {
+    font-size: 0.85rem; color: var(--black); text-decoration: none;
+    border-bottom: 1px solid var(--black); padding-bottom: 1px;
+    transition: opacity 0.2s;
+  }
+  .btn-secondary:hover { opacity: 0.4; }
+  .hero-reel {
+    background: var(--black); border-radius: 16px;
+    aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative; cursor: pointer; margin-bottom: 1rem;
+  }
+  .reel-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); }
+  .reel-lines {
+    position: absolute; inset: 0; opacity: 0.06;
+    background-image: repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 32px);
+  }
+  .play-btn {
+    position: relative; z-index: 2;
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s;
+  }
+  .hero-reel:hover .play-btn { transform: scale(1.1); }
+  .play-btn svg { margin-left: 4px; }
+  .reel-label {
+    position: absolute; bottom: 1rem; left: 1rem; z-index: 2;
+    color: rgba(255,255,255,0.55); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+  .stat-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.25rem;
+  }
+  .stat-num { font-family: var(--serif); font-size: 1.75rem; line-height: 1; margin-bottom: 0.2rem; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.03em; }
+
+  .marquee-wrap {
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 0.85rem 0; overflow: hidden; background: var(--black); color: var(--white);
+  }
+  .marquee-track {
+    display: flex; gap: 3rem; white-space: nowrap;
+    animation: marquee 18s linear infinite;
+    width: max-content;
+  }
+  .marquee-item {
+    font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 1rem; opacity: 0.75;
+  }
+  .marquee-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  .section { padding: 6rem 3rem; }
+  .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 3rem; }
+  .section-label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .section-title { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1; letter-spacing: -0.02em; }
+  .section-link { font-size: 0.82rem; color: var(--muted); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; transition: color 0.2s; }
+  .section-link:hover { color: var(--black); }
+
+  .work-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.25rem; }
+  .work-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; cursor: pointer;
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .work-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.08); }
+  .work-card.large { grid-column: span 7; }
+  .work-card.small { grid-column: span 5; }
+  .work-thumb {
+    aspect-ratio: 16/9; background: var(--black);
+    position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .thumb-bg { position: absolute; inset: 0; }
+  .thumb-overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.25s; background: rgba(0,0,0,0.35);
+  }
+  .work-card:hover .thumb-overlay { opacity: 1; }
+  .thumb-play {
+    width: 48px; height: 48px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .thumb-play svg { margin-left: 3px; }
+  .work-info { padding: 1.25rem 1.5rem; }
+  .work-cat { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem; }
+  .work-name { font-family: var(--serif); font-size: 1.2rem; letter-spacing: -0.01em; margin-bottom: 0.25rem; }
+  .work-desc { font-size: 0.82rem; color: #666; line-height: 1.6; }
+
+  .t1 { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+  .t2 { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); }
+  .t3 { background: linear-gradient(135deg, #1a0533 0%, #2d1b69 100%); }
+  .t4 { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%); }
+
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  .service-card {
+    border: 1px solid var(--border); border-radius: 16px; padding: 2rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .service-card:hover { border-color: var(--black); background: #fff; }
+  .service-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+  .service-name { font-family: var(--serif); font-size: 1.2rem; margin-bottom: 0.5rem; letter-spacing: -0.01em; }
+  .service-desc { font-size: 0.85rem; color: #666; line-height: 1.7; }
+
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+  .about-visual {
+    background: var(--black); border-radius: 20px; aspect-ratio: 4/5;
+    position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 2rem;
+  }
+  .about-visual-bg { position: absolute; inset: 0; background: linear-gradient(160deg, #1c1c1c, #0a0a0a); }
+  .about-badge {
+    position: relative; z-index: 2;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 1rem 1.25rem; backdrop-filter: blur(8px);
+  }
+  .about-badge-name { color: #fff; font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .about-badge-role { color: rgba(255,255,255,0.5); font-size: 0.78rem; letter-spacing: 0.04em; }
+  .about-body { font-size: 1rem; color: #444; line-height: 1.85; margin-bottom: 1.5rem; }
+  .about-skills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
+  .skill-pill {
+    background: #fff; border: 1px solid var(--border);
+    font-size: 0.78rem; padding: 0.4rem 1rem; border-radius: 100px; color: #555;
+  }
+
+  .contact-section {
+    background: var(--black); color: var(--white);
+    padding: 6rem 3rem; text-align: center;
+  }
+  .contact-label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 1rem; }
+  .contact-title { font-family: var(--serif); font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: -0.02em; margin-bottom: 1.5rem; line-height: 1.05; }
+  .contact-title em { font-style: italic; color: var(--accent); }
+  .contact-sub { font-size: 1rem; color: rgba(255,255,255,0.5); max-width: 440px; margin: 0 auto 3rem; line-height: 1.75; }
+  .contact-btn {
+    display: inline-flex; align-items: center; gap: 0.75rem;
+    background: var(--accent); color: var(--black);
+    font-size: 0.9rem; font-weight: 500; padding: 1rem 2.5rem;
+    border-radius: 100px; text-decoration: none; letter-spacing: 0.02em;
+    transition: transform 0.2s;
+  }
+  .contact-btn:hover { transform: scale(1.03); }
+  .contact-links { display: flex; justify-content: center; gap: 2.5rem; margin-top: 3.5rem; }
+  .contact-link { color: rgba(255,255,255,0.35); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; transition: color 0.2s; }
+  .contact-link:hover { color: rgba(255,255,255,0.8); }
+
+  footer {
+    background: var(--black); color: rgba(255,255,255,0.25);
+    padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem;
+  }
+
+  .fade-up { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 1.5rem; padding-top: 5.5rem; gap: 2.5rem; }
+    .hero-stats { grid-template-columns: repeat(3, 1fr); }
+    .section { padding: 4rem 1.5rem; }
+    .work-grid { grid-template-columns: 1fr; }
+    .work-card.large, .work-card.small { grid-column: span 1; }
+    .services-grid { grid-template-columns: 1fr; }
+    .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .about-visual { aspect-ratio: 3/2; }
+    .contact-section { padding: 4rem 1.5rem; }
+    footer { padding: 1.5rem; flex-direction: column; gap: 0.5rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">thehamzaani</div>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#about">About</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Let's Talk</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-left fade-up">
+    <span class="hero-tag">Available for projects</span>
+    <h1 class="hero-title">
+      Editing stories<br>that <em>actually</em><br>get watched.
+    </h1>
+    <p class="hero-sub">YouTube editor specializing in retention-driven cuts, pacing, and storytelling for content creators who want growth.</p>
+    <div class="hero-actions">
+      <a href="#work" class="btn-primary">View my work</a>
+      <a href="#contact" class="btn-secondary">Get in touch</a>
+    </div>
+  </div>
+  <div class="hero-right fade-up" style="transition-delay:0.15s">
+    <div class="hero-reel">
+      <div class="reel-bg"></div>
+      <div class="reel-lines"></div>
+      <div class="play-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <polygon points="5,3 19,12 5,21" fill="#0e0e0e"/>
+        </svg>
+      </div>
+      <span class="reel-label">Showreel 2024</span>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="stat-num">50+</div>
+        <div class="stat-label">Videos edited</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">12M+</div>
+        <div class="stat-label">Views generated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">3yr</div>
+        <div class="stat-label">Experience</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item"><span class="marquee-dot"></span>YouTube Editing</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Color Grading</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Motion Graphics</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Premiere Pro</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>After Effects</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Sound Design</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Thumbnails</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Storytelling</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>YouTube Editing</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Color Grading</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Motion Graphics</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Premiere Pro</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>After Effects</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Sound Design</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Thumbnails</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Storytelling</span>
+  </div>
+</div>
+
+<section class="section" id="work">
+  <div class="section-header fade-up">
+    <div>
+      <p class="section-label">Selected work</p>
+      <h2 class="section-title">Recent projects</h2>
+    </div>
+    <a href="#contact" class="section-link">View all →</a>
+  </div>
+  <div class="work-grid">
+    <div class="work-card large fade-up">
+      <div class="work-thumb">
+        <div class="thumb-bg t1"></div>
+        <div class="thumb-overlay"><div class="thumb-play"><svg width="18" height="18" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="#0e0e0e"/></svg></div></div>
+      </div>
+      <div class="work-info">
+        <p class="work-cat">YouTube · Vlog</p>
+        <p class="work-name">Day in My Life — 1.2M views</p>
+        <p class="work-desc">Fast-paced lifestyle vlog with cinematic b-roll transitions and energetic pacing.</p>
+      </div>
+    </div>
+    <div class="work-card small fade-up" style="transition-delay:0.1s">
+      <div class="work-thumb">
+        <div class="thumb-bg t2"></div>
+        <div class="thumb-overlay"><div class="thumb-play"><svg width="18" height="18" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="#0e0e0e"/></svg></div></div>
+      </div>
+      <div class="work-info">
+        <p class="work-cat">YouTube · Tech</p>
+        <p class="work-name">Tech Review Series</p>
+        <p class="work-desc">Clean, minimal style with smooth text animations.</p>
+      </div>
+    </div>
+    <div class="work-card small fade-up" style="transition-delay:0.05s">
+      <div class="work-thumb">
+        <div class="thumb-bg t3"></div>
+        <div class="thumb-overlay"><div class="thumb-play"><svg width="18" height="18" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="#0e0e0e"/></svg></div></div>
+      </div>
+      <div class="work-info">
+        <p class="work-cat">YouTube · Commentary</p>
+        <p class="work-name">Essay-style Commentary</p>
+        <p class="work-desc">Long-form cuts with engaging storytelling rhythm.</p>
+      </div>
+    </div>
+    <div class="work-card large fade-up" style="transition-delay:0.1s">
+      <div class="work-thumb">
+        <div class="thumb-bg t4"></div>
+        <div class="thumb-overlay"><div class="thumb-play"><svg width="18" height="18" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" fill="#0e0e0e"/></svg></div></div>
+      </div>
+      <div class="work-info">
+        <p class="work-cat">YouTube · Travel</p>
+        <p class="work-name">Travel Documentary Short</p>
+        <p class="work-desc">Cinematic color grades, aerial cuts, and ambient sound layering.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="services" style="background: #fff;">
+  <div class="section-header fade-up">
+    <div>
+      <p class="section-label">What I offer</p>
+      <h2 class="section-title">Services</h2>
+    </div>
+  </div>
+  <div class="services-grid">
+    <div class="service-card fade-up">
+      <div class="service-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e0e0e" stroke-width="2.2" stroke-linecap="round">
+          <polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+        </svg>
+      </div>
+      <p class="service-name">YouTube Video Editing</p>
+      <p class="service-desc">Full editing from raw footage to publish-ready video. Pacing, cuts, graphics, subtitles, and sound — all handled.</p>
+    </div>
+    <div class="service-card fade-up" style="transition-delay:0.1s">
+      <div class="service-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e0e0e" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <p class="service-name">Shorts & Reels</p>
+      <p class="service-desc">Vertical short-form content optimized for retention, hooks, and algorithm performance across platforms.</p>
+    </div>
+    <div class="service-card fade-up" style="transition-delay:0.2s">
+      <div class="service-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e0e0e" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+      </div>
+      <p class="service-name">Color Grading & VFX</p>
+      <p class="service-desc">Professional color correction and grading, motion graphics, lower thirds, and light visual effects.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="about-grid">
+    <div class="about-visual fade-up">
+      <div class="about-visual-bg"></div>
+      <div class="about-badge">
+        <p class="about-badge-name">Hamza — thehamzaani</p>
+        <p class="about-badge-role">Video Editor · Content Creator</p>
+      </div>
+    </div>
+    <div class="fade-up" style="transition-delay:0.15s">
+      <p class="section-label">About me</p>
+      <h2 class="section-title" style="margin-bottom:1.5rem">Editor who<br>obsesses over<br>every frame.</h2>
+      <p class="about-body">I'm Hamza — a video editor focused on helping YouTube creators grow their channels through sharp editing, strong pacing, and storytelling that keeps viewers watching.</p>
+      <p class="about-body">I understand retention, hooks, and what makes someone click "watch next." Every edit I deliver is built with that in mind.</p>
+      <div class="about-skills">
+        <span class="skill-pill">Premiere Pro</span>
+        <span class="skill-pill">After Effects</span>
+        <span class="skill-pill">DaVinci Resolve</span>
+        <span class="skill-pill">Audition</span>
+        <span class="skill-pill">CapCut</span>
+        <span class="skill-pill">Motion Graphics</span>
+        <span class="skill-pill">Color Grading</span>
+        <span class="skill-pill">Sound Design</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="contact-section" id="contact">
+  <p class="contact-label">Get in touch</p>
+  <h2 class="contact-title">Ready to make<br><em>great videos?</em></h2>
+  <p class="contact-sub">Whether you need a long-term editor or a one-off project, I'd love to hear about what you're working on.</p>
+  <a href="mailto:hello@thehamzaani.com" class="contact-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e0e0e" stroke-width="2.2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    hello@thehamzaani.com
+  </a>
+  <div class="contact-links">
+    <a href="#" class="contact-link">YouTube</a>
+    <a href="#" class="contact-link">Instagram</a>
+    <a href="#" class="contact-link">Twitter / X</a>
+    <a href="#" class="contact-link">Upwork</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2024 thehamzaani</span>
+  <span>Video Editor · YouTube Specialist</span>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
